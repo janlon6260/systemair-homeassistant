@@ -1,0 +1,469 @@
+esphome:
+  name: systemair
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "*********************************"
+
+ota:
+  password: "******************************"
+
+wifi:
+  ssid: "YOUR WIFI SSID"
+  password: "YOUR WIFI PASSWROD"
+  # Optional manual IP
+  manual_ip:
+    static_ip: STATIC_IP_ADDRESS_TO_ESPBOARD
+    gateway: NETWORK_GATEWAY_IP
+    subnet: 255.255.255.0
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Systemair Fallback Hotspot"
+    password: "**************"
+
+captive_portal:
+
+## MODBUS
+uart:
+  id: mod_bus
+  rx_pin: 16 # ADJUST THIS TO YOUR BOARD
+  tx_pin: 17 # ADJUST THIS TO YOUR BOARD
+  # for systemair: 9600, 19200, 28800, 38400, 57600, 76800, 115200
+  baud_rate: 115200
+  data_bits: 8  # 8 is default
+  parity: None
+  stop_bits: 1
+
+modbus:
+  id: modbus1
+  flow_control_pin: 5 # ADJUST THIS TO YOUR BOARD
+  send_wait_time: 250ms # default 250ms
+
+modbus_controller:
+  - id: systemair
+    # use unit id 1 to read/write modbus registers and id 2 for IAM registers
+    address: 1  # 1 to 254?
+    modbus_id: modbus1
+    setup_priority: -10
+    command_throttle: 100ms  # [default 0ms] minimum time between requests
+    update_interval: 10s
+
+select:
+ ##### FAN SPEED FOR DIFFERENT USER MODES ##### ->
+
+  - platform: modbus_controller
+    name: "Systemair Crowded: SAF level"
+    icon: mdi:fan
+    address: 1134
+    value_type: U_WORD
+    optionsmap:
+      "Normal": 3
+      "Høy": 4
+      "Veldig høy": 5
+
+  - platform: modbus_controller
+    name: "Systemair Crowded: EAF level"
+    icon: mdi:fan
+    address: 1135
+    value_type: U_WORD
+    optionsmap:
+      "Normal": 3
+      "Høy": 4
+      "Veldig høy": 5
+
+  - platform: modbus_controller
+    name: "Systemair Fire Place: SAF level"
+    icon: mdi:fan
+    address: 1138
+    value_type: U_WORD
+    optionsmap:
+      "Normal": 3
+      "Høy": 4
+      "Veldig høy": 5
+
+  - platform: modbus_controller
+    name: "Systemair Fire Place: EAF level"
+    icon: mdi:fan
+    address: 1139
+    value_type: U_WORD
+    optionsmap:
+      "Veldig lavt": 1
+      "Lav": 2
+      "Normal": 3
+
+  - platform: modbus_controller
+    name: "Systemair AWAY: SAF level"
+    icon: mdi:fan
+    address: 1140
+    value_type: U_WORD
+    optionsmap:
+      "Veldig lavt": 1
+      "Lav": 2
+      "Normal": 3
+
+  - platform: modbus_controller
+    name: "Systemair AWAY: EAF level"
+    icon: mdi:fan
+    address: 1141
+    value_type: U_WORD
+    optionsmap:
+      "Veldig lavt": 1
+      "Lav": 2
+      "Normal": 3
+
+  - platform: modbus_controller
+    name: "Systemair HOLIDAY: SAF level"
+    icon: mdi:fan
+    address: 1142
+    value_type: U_WORD
+    optionsmap:
+      "Veldig lavt": 1
+      "Lav": 2
+      "Normal": 3
+
+  - platform: modbus_controller
+    name: "Systemair HOLIDAY: EAF level"
+    icon: mdi:fan
+    address: 1143
+    value_type: U_WORD
+    optionsmap:
+      "Veldig lavt": 1
+      "Lav": 2
+      "Normal": 3
+
+  - platform: modbus_controller
+    name: "Systemair COOKER HOOD: SAF level"
+    icon: mdi:fan
+    address: 1144
+    value_type: U_WORD
+    optionsmap:
+      "Lav": 2
+      "Normal": 3
+      "Høy": 4
+
+  - platform: modbus_controller
+    name: "Systemair COOKER HOOD: EAF level"
+    icon: mdi:fan
+    address: 1145
+    value_type: U_WORD
+    optionsmap:
+      "Lav": 2
+      "Normal": 3
+      "Høy": 4
+ 
+  ##### FAN SPEED FOR DIFFERENT USER MODES ##### <-
+ 
+  - platform: modbus_controller
+    name: "Systemair Fan speed level for mode manual"
+    icon: mdi:fan
+    address: 1130
+    value_type: U_WORD
+    optionsmap:
+      "Høy": 4
+      "Normal": 3
+      "Lav": 2
+
+  - platform: modbus_controller
+    name: "Systemair Set new user mode"
+    icon: mdi:account
+    address: 1161
+    value_type: U_WORD
+    optionsmap:
+      "Ingen brukermodus": 0
+      "Autodrift": 1
+      "Manuell drift": 2
+      "Befolket hus": 3
+      "Rask luftutskiftning": 4
+      "Ildsted i bruk": 5
+      "Borte": 6
+      "Ferie": 7
+
+number:
+  - platform: modbus_controller
+    name: "Systemair Temperature setpoint"
+    address: 2000
+    register_type: holding
+    value_type: S_WORD
+    min_value: 12
+    max_value: 25
+    icon: mdi:home-thermometer
+    unit_of_measurement: "°C"
+    multiply: 10
+
+  - platform: modbus_controller
+    modbus_controller_id: systemair
+    id: REG_USERMODE_FIREPLACE_TIME
+    name: "Systemair Fireplace time delay"
+    address: 1102
+    value_type: U_WORD
+    unit_of_measurement: "min"
+
+  - platform: modbus_controller
+    modbus_controller_id: systemair
+    id: REG_FAN_LEVEL_SAF_MIN_PERCENTAGE
+    name: "Systemair SAF Minimum"
+    address: 1400
+    value_type: U_WORD
+    unit_of_measurement: "%"
+
+  - platform: modbus_controller
+    modbus_controller_id: systemair
+    id: REG_FAN_LEVEL_EAF_MIN_PERCENTAGE
+    name: "Systemair EAF Minimum"
+    address: 1401
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "%"
+
+  - platform: modbus_controller
+    modbus_controller_id: systemair
+    id: REG_FAN_LEVEL_SAF_LOW_PERCENTAGE
+    name: "Systemair SAF Low"
+    address: 1402
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "%"
+
+  - platform: modbus_controller
+    modbus_controller_id: systemair
+    id: REG_FAN_LEVEL_EAF_LOW_PERCENTAGE
+    name: "Systemair EAF Low"
+    address: 1403
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "%"
+
+  - platform: modbus_controller
+    modbus_controller_id: systemair
+    id: REG_FAN_LEVEL_SAF_NORMAL_PERCENTAGE
+    name: "Systemair SAF NORMAL"
+    address: 1404
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "%"
+
+  - platform: modbus_controller
+    modbus_controller_id: systemair
+    id: REG_FAN_LEVEL_EAF_NORMAL_PERCENTAGE
+    name: "Systemair EAF NORMAL"
+    address: 1405
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "%"
+
+  - platform: modbus_controller
+    modbus_controller_id: systemair
+    id: REG_FAN_LEVEL_SAF_HIGH_PERCENTAGE
+    name: "Systemair SAF HIGH"
+    address: 1406
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "%"
+
+  - platform: modbus_controller
+    modbus_controller_id: systemair
+    id: REG_FAN_LEVEL_EAF_HIGH_PERCENTAGE
+    name: "Systemair EAF HIGH"
+    address: 1407
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "%"
+
+  - platform: modbus_controller
+    modbus_controller_id: systemair
+    id: REG_FAN_LEVEL_SAF_MAX_PERCENTAGE
+    name: "Systemair SAF MAX"
+    address: 1408
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "%"
+
+  - platform: modbus_controller
+    modbus_controller_id: systemair
+    id: REG_FAN_LEVEL_EAF_MAX_PERCENTAGE
+    name: "Systemair EAF MAX"
+    address: 1409
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: "%"
+
+switch:
+  - platform: modbus_controller
+    name: "Systemair ECO mode"
+    icon: mdi:leaf-circle
+    address: 2504
+    register_type: holding
+    bitmask: 1
+
+  - platform: modbus_controller
+    name: "Systemair Cooling Recovery"
+    icon: mdi:snowflake-thermometer
+    address: 2133
+    register_type: holding
+    bitmask: 1
+
+  - platform: modbus_controller
+    name: "Systemair Free Cooling"
+    icon: mdi:snowflake-thermometer
+    address: 4100
+    register_type: holding
+    bitmask: 1
+
+sensor:
+
+  - platform: modbus_controller
+    modbus_controller_id: systemair
+    name: "Systemair Active user mode"
+    icon: mdi:account
+    register_type: read
+    address: 1160
+    value_type: S_WORD
+
+  - platform: modbus_controller
+    modbus_controller_id: systemair
+    name: "Systemair Tid igjen til normaldrift"
+    icon: mdi:account
+    register_type: read
+    address: 1110
+    value_type: U_WORD
+
+  - platform: modbus_controller
+    modbus_controller_id: systemair
+    name: "Systemair Remaning filter time"
+    icon: mdi:air-filter
+    address: 7004
+    value_type: S_DWORD_R
+    register_type: read
+    unit_of_measurement: 'seconds'
+  - platform: modbus_controller
+    modbus_controller_id: systemair
+    name: "Systemair Supply Air Fan RPM"
+    icon: mdi:fan
+    register_type: read
+    address: 12400
+    value_type: S_WORD
+    unit_of_measurement: 'o/min'
+    filters:
+        - throttle: 5s
+        - delta: 10.0
+
+  - platform: modbus_controller
+    modbus_controller_id: systemair
+    name: "Systemair Extract Air Fan RPM"
+    icon: mdi:fan
+    register_type: read
+    address: 12401
+    value_type: S_WORD
+    unit_of_measurement: 'o/min'
+    filters:
+        - throttle: 5s
+        - delta: 10.0
+
+  - platform: modbus_controller
+    modbus_controller_id: systemair
+    name: "Systemair Outdoor Air Temperature"
+    register_type: read
+    address: 12101
+    value_type: S_WORD
+    unit_of_measurement: "°C"
+    device_class: temperature
+    accuracy_decimals: 1
+    filters:
+    - multiply: 0.1
+    - or:
+        - throttle: 5s
+        - delta: 2.0
+
+  - platform: modbus_controller
+    modbus_controller_id: systemair
+    name: "Systemair Extract Air Temperature"
+    register_type: read
+    address: 12543
+    value_type: S_WORD
+    unit_of_measurement: "°C"
+    device_class: temperature
+    accuracy_decimals: 1
+    filters:
+    - multiply: 0.1
+    - or:
+        - throttle: 5s
+        - delta: 2.0
+
+  - platform: modbus_controller
+    modbus_controller_id: systemair
+    name: "Systemair Supply Air Temperature"
+    register_type: read
+    address: 12102
+    value_type: S_WORD
+    unit_of_measurement: "°C"
+    device_class: temperature
+    accuracy_decimals: 1
+    filters:
+    - multiply: 0.1
+    - or:
+        - throttle: 5s
+        - delta: 2.0
+
+  - platform: modbus_controller
+    modbus_controller_id: systemair
+    name: "Systemair Over Heat Temperature"
+    register_type: read
+    address: 12107
+    value_type: S_WORD
+    unit_of_measurement: "°C"
+    device_class: temperature
+    accuracy_decimals: 1
+    filters:
+    - multiply: 0.1
+    - or:
+        - throttle: 5s
+        - delta: 2.0
+
+  - platform: modbus_controller
+    modbus_controller_id: systemair
+    name: "Systemair Relative Humidity Sensor"
+    register_type: read
+    address: 12135
+    value_type: S_WORD
+    unit_of_measurement: "%"
+    device_class: humidity
+    accuracy_decimals: 0
+    filters:
+        - throttle: 5s
+        - delta: 2.0
+
+  - platform: modbus_controller
+    modbus_controller_id: systemair
+    name: "Systemair Heat Exchanger Usage"
+    icon: mdi:sync-circle
+    register_type: read
+    address: 14102
+    value_type: S_WORD
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    filters:
+        - throttle: 5s
+        - delta: 2.0
+
+  - platform: modbus_controller
+    modbus_controller_id: systemair
+    name: "Systemair Heater Coil Usage"
+    icon: mdi:heating-coil
+    register_type: read
+    address: 2148
+    value_type: S_WORD
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    filters:
+        - throttle: 5s
+        - delta: 2.0
