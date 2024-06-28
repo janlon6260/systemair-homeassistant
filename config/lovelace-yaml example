@@ -1,0 +1,49 @@
+type: entities
+show_header_toggle: false
+entities:
+  - entity: select.systemair_fan_speed_level_for_mode_manual
+    icon: ''
+    name: Predefinerte viftehastigheter
+  - entity: select.systemair_set_new_user_mode
+    name: Sett modus
+  - entity: switch.systemair_eco_mode
+    name: Strømsparingsmodus
+  - entity: switch.systemair_free_cooling
+    name: Frikjøling
+  - entity: number.systemair_temperature_setpoint
+    name: Settpunkt tilluftstemp.
+  - entity: sensor.systemair_supply_air_temperature
+    name: Innblåsningstemperatur
+    icon: ''
+  - entity: sensor.systemair_extract_air_temperature
+    name: Avtrekkstemperatur
+    icon: ''
+  - entity: sensor.systemair_outdoor_air_temperature
+    name: Inntakstemperatur (utendørstemp.)
+  - entity: sensor.systemair_over_heat_temperature
+    name: Overopphetningsføler varmebatteri
+  - entity: sensor.systemair_relative_humidity_sensor
+    icon: ''
+    name: Luftfuktighet i avtrekksluften
+  - entity: sensor.systemair_supply_air_fan_rpm
+    name: Tilluftsvifte
+    type: custom:bar-card
+    max: 5000
+    min: 0
+    entity_row: true
+    color: green
+  - entity: sensor.systemair_extract_air_fan_rpm
+    name: Avtrekksvifte
+    type: custom:bar-card
+    max: 5000
+    min: 0
+    entity_row: true
+    color: red
+  - entity: sensor.systemair_heat_exchanger_usage
+    name: Pådrag varmeveksler
+  - entity: sensor.systemair_heater_coil_usage
+    name: Pådrag varmebatteri
+  - entity: sensor.remaining_days_to_filter_change
+    name: Antall dager til filterbytte
+    icon: mdi:air-filter
+title: Ventilasjonsanlegg
